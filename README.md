@@ -72,11 +72,6 @@ npm run dev
 
 4.Open the link shown in the terminal (e.g., http://localhost:5173) in your browser.
 
-🔑 Login Credentials (Admin)
-Username: admin
-
-Password: password123
-
 ################################################
 🛠️ Git Workflow for Team Members
 DO NOT push directly to the main branch!
