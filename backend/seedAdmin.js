@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
-import User from "./models/User.js"; // Importing User Model
+import User from "./models/User.js";
 
 dotenv.config();
 
@@ -13,24 +13,24 @@ mongoose
 
 const seedAdmin = async () => {
   try {
-    // 1. Check if admin already exists
+    //  Check if admin already exists
     const userExists = await User.findOne({ username: "admin" });
     if (userExists) {
       console.log("⚠️ Admin user already exists!");
       process.exit();
     }
 
-    // 2. Hash the password "password123"
+    //  Hash the password "password123"
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash("password123", salt);
 
-    // 3. Create the Admin User
+    //  Create the Admin User
     const adminUser = new User({
       name: "Super Admin",
-      username: "admin", // The username you asked for
-      email: "admin@hotel.com", // Dummy email
-      password: hashedPassword, // Encrypted password
-      role: "admin", // Role is admin
+      username: "admin",
+      email: "admin@hotel.com",
+      password: hashedPassword,
+      role: "admin",
     });
 
     await adminUser.save();
