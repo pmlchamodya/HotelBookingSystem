@@ -38,17 +38,8 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* ----------------------------------------------------
-        FIX: Root Path ("/") now renders the Home Page 
-        instead of redirecting to Login.
-        ----------------------------------------------------
-      */}
       <Route path="/" element={<Home />} />
 
-      {/* Login Route: 
-        If user is ALREADY logged in, redirect them to their dashboard 
-        instead of showing the login screen again.
-      */}
       <Route
         path="/login"
         element={
