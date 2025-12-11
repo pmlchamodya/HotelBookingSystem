@@ -5,66 +5,99 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 
-// Import Components
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
+import StaffDashboard from "./pages/dashboard/staff/StaffDashboard";
+import Home from "./pages/dashboard/home/Home";
 
-// Protected Route Component
-// This prevents unauthorized users from accessing the dashboard
-const ProtectedRoute = ({ children, role }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="p-10 text-center">Loading...</div>;
 
-  // If not logged in, go to login
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/login" replace />;
 
-  // If role is specified (e.g., 'admin') and user doesn't match, redirect
-  if (role && user.role !== role) {
-    return <Navigate to="/dashboard" />;
+  // Role Check
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
+};
+
+const AppRoutes = () => {
+  const { user } = useContext(AuthContext);
+
+  // Helper function to decide where to redirect logged-in users
+  const getDashboardRoute = (role) => {
+    if (role === "admin") return "/admin-dashboard";
+    if (role === "staff") return "/staff-dashboard";
+    return "/";
+  };
+
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+
+      <Route
+        path="/login"
+        element={
+          user ? <Navigate to={getDashboardRoute(user.role)} /> : <Login />
+        }
+      />
+
+      <Route path="/register" element={<Register />} />
+
+      {/* ADMIN ROUTE */}
+      <Route
+        path="/admin-dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* STAFF ROUTE (NEW) */}
+      <Route
+        path="/staff-dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["staff"]}>
+            <StaffDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* CUSTOMER/DEFAULT DASHBOARD */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["customer"]}>
+            <div className="p-10">
+              <h1>User Dashboard</h1>
+              <a href="/" className="text-blue-500">
+                Go Home
+              </a>
+            </div>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 };
 
 const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          {/* Default Route */}
-          <Route path="/" element={<Navigate to="/login" />} />
-
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          {/* Protected Admin Route */}
-          <Route
-            path="/admin-dashboard"
-            element={
-              <ProtectedRoute role="admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Fallback for other users (You can create a UserDashboard later) */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <div style={{ padding: "20px" }}>
-                  <h1>Customer Dashboard (Coming Soon)</h1>
-                  <a href="/login">Logout</a>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        <AppRoutes />
+        <Toaster position="top-right" reverseOrder={false} />
       </Router>
     </AuthProvider>
   );
