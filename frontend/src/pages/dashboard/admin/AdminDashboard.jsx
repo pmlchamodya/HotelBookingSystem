@@ -31,26 +31,26 @@ const AdminDashboard = () => {
             Management
           </div>
           <button className="w-full text-left px-4 py-2 hover:bg-blue-800 rounded transition">
-            👥 Users (Member 1)
+            👥 Users
           </button>
           <button className="w-full text-left px-4 py-2 hover:bg-blue-800 rounded transition">
-            🛏️ Rooms (Member 2)
+            🛏️ Rooms
           </button>
           <button className="w-full text-left px-4 py-2 hover:bg-blue-800 rounded transition">
-            📅 Bookings (Member 3)
+            📅 Bookings
           </button>
           <button className="w-full text-left px-4 py-2 hover:bg-blue-800 rounded transition">
-            🏊 Facilities (Member 5)
+            🏊 Facilities
           </button>
 
           <div className="text-gray-400 text-xs uppercase font-semibold mt-6 mb-2">
             Communication
           </div>
           <button className="w-full text-left px-4 py-2 hover:bg-blue-800 rounded transition">
-            📩 Inquiries (Member 4)
+            📩 Inquiries
           </button>
           <button className="w-full text-left px-4 py-2 hover:bg-blue-800 rounded transition">
-            ⭐ Reviews (Member 6)
+            ⭐ Reviews
           </button>
         </nav>
 
