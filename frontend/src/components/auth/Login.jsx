@@ -21,7 +21,7 @@ const Login = () => {
       if (result.user.role === "admin") {
         navigate("/admin-dashboard");
       } else {
-        navigate("/dashboard"); // Default dashboard
+        navigate("/dashboard");
       }
     } else {
       notifyError(result.error || "Login failed");
