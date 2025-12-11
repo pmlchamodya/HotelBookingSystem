@@ -16,8 +16,13 @@ const Login = () => {
     if (result.success) {
       notifySuccess("Login Successful!");
 
-      if (result.user.role === "admin") {
+      // --- REDIRECT LOGIC ---
+      const role = result.user.role;
+
+      if (role === "admin") {
         navigate("/admin-dashboard");
+      } else if (role === "staff") {
+        navigate("/staff-dashboard");
       } else {
         navigate("/");
       }
@@ -48,7 +53,6 @@ const Login = () => {
               }
             />
           </div>
-
           <div>
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Password
@@ -63,7 +67,6 @@ const Login = () => {
               }
             />
           </div>
-
           <button
             type="submit"
             className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
