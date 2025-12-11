@@ -18,6 +18,10 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Edit Mode States
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+
   const [staffFormData, setStaffFormData] = useState({
     name: "",
     username: "",
@@ -26,7 +30,7 @@ const AdminDashboard = () => {
     confirmPassword: "",
   });
 
-  // --- FETCH DATA  ---
+  // --- FETCH DATA (UPDATED) ---
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -37,16 +41,14 @@ const AdminDashboard = () => {
       }
     };
 
-    if (activeTab === "customers" || activeTab === "staff") {
-      fetchUsers();
-    }
+    fetchUsers();
   }, [activeTab, refreshKey]);
 
   const customerList = users.filter((u) => u.role === "customer");
   const staffList = users.filter((u) => u.role === "staff");
 
-  // --- ADD STAFF FUNCTION ---
-  const handleAddStaff = async (e) => {
+  // --- HANDLE FORM SUBMIT (ADD OR UPDATE) ---
+  const handleSubmitStaff = async (e) => {
     e.preventDefault();
 
     if (staffFormData.password !== staffFormData.confirmPassword) {
@@ -58,22 +60,49 @@ const AdminDashboard = () => {
       const dataToSend = { ...staffFormData };
       delete dataToSend.confirmPassword;
 
-      await api.post("/admin/add-staff", dataToSend);
-      notifySuccess("Staff Member Added Successfully!");
+      if (isEditing) {
+        // Update Logic
+        if (!dataToSend.password) delete dataToSend.password;
+        await api.put(`/admin/users/${editId}`, dataToSend);
+        notifySuccess("Staff Updated Successfully!");
+      } else {
+        // Create Logic
+        await api.post("/admin/add-staff", dataToSend);
+        notifySuccess("Staff Member Added Successfully!");
+      }
 
-      // Reset Form
-      setStaffFormData({
-        name: "",
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      });
-
+      resetForm();
       setRefreshKey((oldKey) => oldKey + 1);
     } catch (err) {
-      notifyError(err.response?.data?.msg || "Failed to add staff");
+      notifyError(err.response?.data?.msg || "Operation Failed");
     }
+  };
+
+  // --- EDIT FUNCTION ---
+  const handleEditClick = (staffMember) => {
+    setIsEditing(true);
+    setEditId(staffMember._id);
+    setStaffFormData({
+      name: staffMember.name,
+      username: staffMember.username,
+      email: staffMember.email,
+      password: "",
+      confirmPassword: "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // --- RESET FORM ---
+  const resetForm = () => {
+    setStaffFormData({
+      name: "",
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
+    setIsEditing(false);
+    setEditId(null);
   };
 
   // --- DELETE FUNCTIONS ---
@@ -229,7 +258,7 @@ const AdminDashboard = () => {
                   Welcome to the Control Center
                 </h3>
                 <p className="text-gray-500 mt-2">
-                  Select a module from the sidebar to start.
+                  Select a module from the sidebar to manage.
                 </p>
               </div>
             </div>
@@ -258,17 +287,23 @@ const AdminDashboard = () => {
           {/* VIEW 3: STAFF MANAGEMENT */}
           {activeTab === "staff" && (
             <div className="animate-fade-in">
-              {/* Add Staff Form */}
+              {/* Add/Edit Staff Form */}
               <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 mb-8">
                 <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                  <span className="bg-green-100 text-green-600 p-2 rounded-lg">
-                    ➕
-                  </span>{" "}
-                  Add New Staff Member
+                  <span
+                    className={`p-2 rounded-lg ${
+                      isEditing
+                        ? "bg-yellow-100 text-yellow-600"
+                        : "bg-green-100 text-green-600"
+                    }`}
+                  >
+                    {isEditing ? "✏️" : "➕"}
+                  </span>
+                  {isEditing ? "Edit Staff Member" : "Add New Staff Member"}
                 </h3>
 
                 <form
-                  onSubmit={handleAddStaff}
+                  onSubmit={handleSubmitStaff}
                   className="grid grid-cols-1 md:grid-cols-2 gap-6"
                 >
                   <div className="space-y-2">
@@ -278,7 +313,7 @@ const AdminDashboard = () => {
                     <input
                       type="text"
                       required
-                      className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                      className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                       value={staffFormData.name}
                       onChange={(e) =>
                         setStaffFormData({
@@ -295,7 +330,7 @@ const AdminDashboard = () => {
                     <input
                       type="text"
                       required
-                      className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                      className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                       value={staffFormData.username}
                       onChange={(e) =>
                         setStaffFormData({
@@ -312,7 +347,7 @@ const AdminDashboard = () => {
                     <input
                       type="email"
                       required
-                      className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                      className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                       value={staffFormData.email}
                       onChange={(e) =>
                         setStaffFormData({
@@ -323,44 +358,68 @@ const AdminDashboard = () => {
                     />
                   </div>
 
-                  {/* Passwords */}
-                  <EyeIconShowPassword
-                    label="Password"
-                    name="password"
-                    value={staffFormData.password}
-                    onChange={(e) =>
-                      setStaffFormData({
-                        ...staffFormData,
-                        password: e.target.value,
-                      })
-                    }
-                  />
+                  {/* Password Fields */}
+                  <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <EyeIconShowPassword
+                      label={
+                        isEditing
+                          ? "New Password (Leave empty to keep current)"
+                          : "Password"
+                      }
+                      name="password"
+                      placeholder={isEditing ? "........" : "********"}
+                      value={staffFormData.password}
+                      onChange={(e) =>
+                        setStaffFormData({
+                          ...staffFormData,
+                          password: e.target.value,
+                        })
+                      }
+                      required={!isEditing}
+                    />
 
-                  <EyeIconShowPassword
-                    label="Confirm Password"
-                    name="confirmPassword"
-                    placeholder="Re-enter password"
-                    value={staffFormData.confirmPassword}
-                    onChange={(e) =>
-                      setStaffFormData({
-                        ...staffFormData,
-                        confirmPassword: e.target.value,
-                      })
-                    }
-                  />
+                    <EyeIconShowPassword
+                      label="Confirm Password"
+                      name="confirmPassword"
+                      placeholder={isEditing ? "........" : "Re-enter password"}
+                      value={staffFormData.confirmPassword}
+                      onChange={(e) =>
+                        setStaffFormData({
+                          ...staffFormData,
+                          confirmPassword: e.target.value,
+                        })
+                      }
+                      required={!isEditing}
+                    />
+                  </div>
 
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 flex gap-3">
                     <button
                       type="submit"
-                      className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 shadow-md hover:shadow-lg transition-all w-full md:w-auto"
+                      className={`px-8 py-3 rounded-xl font-bold text-white shadow-md transition-all w-full md:w-auto ${
+                        isEditing
+                          ? "bg-yellow-500 hover:bg-yellow-600"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
                     >
-                      Create Staff Account
+                      {isEditing ? "Update Staff" : "Create Staff Account"}
                     </button>
+
+                    {/* Cancel Edit Button */}
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={resetForm}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-xl font-bold shadow-md transition-all w-full md:w-auto"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 </form>
               </div>
 
-              {/* Staff List Table */}
+              {/* Staff Table */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                   <h3 className="text-xl font-bold text-gray-800">
@@ -373,6 +432,7 @@ const AdminDashboard = () => {
                 <UserTable
                   users={staffList}
                   onDelete={triggerDeleteConfirm}
+                  onEdit={handleEditClick}
                   isStaffView={true}
                 />
               </div>
@@ -384,7 +444,7 @@ const AdminDashboard = () => {
   );
 };
 
-// --- Sub Components ---
+// Reusable UI Components
 
 const SidebarBtn = ({ label, icon, isActive, onClick }) => (
   <button
@@ -423,7 +483,7 @@ const StatCard = ({ title, value, color, icon }) => {
   );
 };
 
-const UserTable = ({ users, onDelete, isStaffView }) => (
+const UserTable = ({ users, onDelete, onEdit, isStaffView }) => (
   <table className="w-full text-left border-collapse">
     <thead>
       <tr className="bg-gray-50 text-gray-500 text-sm uppercase tracking-wider">
@@ -455,7 +515,15 @@ const UserTable = ({ users, onDelete, isStaffView }) => (
                 {u.role.toUpperCase()}
               </span>
             </td>
-            <td className="p-5 text-right">
+            <td className="p-5 text-right flex justify-end gap-2">
+              {isStaffView && (
+                <button
+                  onClick={() => onEdit(u)}
+                  className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 px-3 py-1 rounded transition font-medium"
+                >
+                  Edit
+                </button>
+              )}
               <button
                 onClick={() => onDelete(u._id)}
                 className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition font-medium"
