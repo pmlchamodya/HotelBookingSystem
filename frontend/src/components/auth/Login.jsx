@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { notifySuccess, notifyError } from "../alert/ToastContext";
 
 const Login = () => {
@@ -11,17 +11,15 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Attempt login
     const result = await login(formData.username, formData.password);
 
     if (result.success) {
       notifySuccess("Login Successful!");
 
-      // Redirect based on role
       if (result.user.role === "admin") {
         navigate("/admin-dashboard");
       } else {
-        navigate("/dashboard");
+        navigate("/");
       }
     } else {
       notifyError(result.error || "Login failed");
@@ -50,6 +48,7 @@ const Login = () => {
               }
             />
           </div>
+
           <div>
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Password
@@ -64,6 +63,7 @@ const Login = () => {
               }
             />
           </div>
+
           <button
             type="submit"
             className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
@@ -71,6 +71,18 @@ const Login = () => {
             Login
           </button>
         </form>
+
+        <div className="mt-6 text-center pt-4 border-t border-gray-100">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+            >
+              Register here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
