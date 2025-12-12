@@ -11,11 +11,13 @@ const EyeIconShowPassword = ({
 
   return (
     <div className="space-y-2">
-      {/* Label */}
-      <label className="text-sm font-semibold text-gray-600">{label}</label>
+      {/* Label Styling */}
+      <label className="block text-xs font-bold text-gray-300 uppercase mb-2 ml-1">
+        {label}
+      </label>
 
       <div className="relative">
-        {/* Input Field */}
+        {/* Input Styling - Glass Effect applied here */}
         <input
           type={show ? "text" : "password"}
           name={name}
@@ -23,17 +25,16 @@ const EyeIconShowPassword = ({
           onChange={onChange}
           placeholder={placeholder}
           required
-          className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none pr-10"
+          className="w-full bg-black/20 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition placeholder-gray-400 pr-10"
         />
 
         {/* Eye Icon Button */}
         <button
           type="button"
           onClick={() => setShow(!show)}
-          className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+          className="absolute right-3 top-3.5 text-gray-400 hover:text-amber-400 focus:outline-none transition-colors"
         >
           {show ? (
-            // Eye Slash Icon (Hide)
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -49,7 +50,6 @@ const EyeIconShowPassword = ({
               />
             </svg>
           ) : (
-            // Eye Icon (Show)
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

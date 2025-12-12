@@ -48,12 +48,14 @@ router.post("/register", async (req, res) => {
       expiresIn: "5d",
     });
 
+    // Send response with token and user data
     res.json({
       token,
       user: {
         id: user.id,
         name: user.name,
         username: user.username,
+        email: user.email,
         role: user.role,
       },
     });
@@ -90,12 +92,14 @@ router.post("/login", async (req, res) => {
       expiresIn: "5d",
     });
 
+    // Send response with token and user data
     res.json({
       token,
       user: {
         id: user.id,
         name: user.name,
         username: user.username,
+        email: user.email,
         role: user.role,
       },
     });

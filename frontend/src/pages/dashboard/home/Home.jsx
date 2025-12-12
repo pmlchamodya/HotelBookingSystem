@@ -345,7 +345,7 @@ const Home = () => {
         </div>
 
         {/* Copyright Bar */}
-        <div className="border-t border-slate-900 pt-8 text-center text-xs text-gray-600">
+        <div className="border-t border-slate-900 pt-8 text-center text-xs text-white-600">
           <p>© 2025 King of Asia Hotels. All rights reserved.</p>
         </div>
       </footer>

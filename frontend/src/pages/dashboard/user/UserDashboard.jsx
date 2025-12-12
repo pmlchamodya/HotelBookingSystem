@@ -1,12 +1,76 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { notifySuccess } from "../../../components/alert/ToastContext";
+import {
+  notifySuccess,
+  notifyError,
+} from "../../../components/alert/ToastContext";
+import api from "../../../config/api";
+import EyeIconShowPassword from "../../../components/icon/Eyeiconshowpassword";
 
 const UserDashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+
+  // --- STATE: Edit Mode ---
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await api.get("/user/profile");
+        setProfileData({
+          name: res.data.name,
+          username: res.data.username,
+          email: res.data.email,
+          password: "",
+          confirmPassword: "",
+        });
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  // --- Handle Profile Update ---
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+
+    // Validate password match
+    if (
+      profileData.password &&
+      profileData.password !== profileData.confirmPassword
+    ) {
+      notifyError("Passwords do not match!");
+      return;
+    }
+
+    try {
+      const dataToSend = { ...profileData };
+      delete dataToSend.confirmPassword;
+
+      // Remove empty password to prevent overwriting with blank
+      if (!dataToSend.password) delete dataToSend.password;
+
+      // Send update request
+      await api.put("/user/profile", dataToSend);
+
+      notifySuccess("Profile Updated Successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      notifyError(err.response?.data?.msg || "Update Failed");
+    }
+  };
 
   const handleLogout = () => {
     navigate("/");
@@ -18,9 +82,8 @@ const UserDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
-      {/* --- SIDEBAR (Luxury Style) --- */}
+      {/* --- SIDEBAR --- */}
       <aside className="w-72 bg-slate-900 text-white flex flex-col shadow-2xl relative overflow-hidden">
-        {/* Background Texture (Optional decoration) */}
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
 
         <div className="p-8 text-center border-b border-slate-800 z-10">
@@ -78,7 +141,11 @@ const UserDashboard = () => {
         <header className="bg-white shadow-sm py-6 px-10 flex justify-between items-center sticky top-0 z-20">
           <div>
             <h2 className="text-2xl font-serif font-bold text-slate-800 capitalize">
-              {activeTab === "overview" ? "Dashboard Overview" : activeTab}
+              {activeTab === "overview"
+                ? "Dashboard Overview"
+                : activeTab === "profile"
+                ? "Profile Settings"
+                : activeTab}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
               Welcome to your personal space
@@ -96,10 +163,9 @@ const UserDashboard = () => {
         </header>
 
         <div className="p-10">
-          {/* --- VIEW 1: OVERVIEW --- */}
+          {/* --- OVERVIEW SECTION --- */}
           {activeTab === "overview" && (
             <div className="animate-fade-in space-y-8">
-              {/* Stats Row */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
                   title="Total Stays"
@@ -120,8 +186,6 @@ const UserDashboard = () => {
                   color="green"
                 />
               </div>
-
-              {/* Banner Area */}
               <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden">
                 <div className="absolute right-0 top-0 h-full w-1/2 bg-amber-500/10 transform skew-x-12"></div>
                 <h3 className="text-3xl font-serif font-bold mb-4 relative z-10">
@@ -138,7 +202,7 @@ const UserDashboard = () => {
             </div>
           )}
 
-          {/* --- VIEW 2: MY BOOKINGS (Member 3 Area) --- */}
+          {/* --- MY BOOKINGS SECTION --- */}
           {activeTab === "bookings" && (
             <div className="animate-fade-in">
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center py-20">
@@ -147,67 +211,166 @@ const UserDashboard = () => {
                   My Bookings
                 </h3>
                 <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                  This section will display your booking history and upcoming
-                  reservations. (To be implemented by Booking Manager - Member
-                  3)
+                  Your booking history and upcoming reservations will appear
+                  here.
                 </p>
                 <div className="inline-block px-6 py-3 bg-gray-100 rounded-lg text-sm text-gray-600 font-mono border border-gray-200">
-                  &lt;BookingTable /&gt; component goes here
+                  Coming Soon...
                 </div>
               </div>
             </div>
           )}
 
-          {/* --- VIEW 3: PROFILE --- */}
+          {/* --- MY PROFILE SECTION  --- */}
           {activeTab === "profile" && (
-            <div className="animate-fade-in max-w-2xl">
+            <div className="animate-fade-in max-w-3xl">
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                <h3 className="text-xl font-bold text-slate-800 mb-6 border-b pb-4">
-                  My Account Details
-                </h3>
-
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                        Full Name
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700">
-                        {user?.name}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                        Username
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700">
-                        {user?.username}
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                      Email Address
-                    </label>
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700">
-                      {user?.email}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                      Role
-                    </label>
-                    <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase">
-                      {user?.role}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-6 border-t flex justify-end">
-                  <button className="text-slate-500 hover:text-slate-800 text-sm font-medium underline">
-                    Request Password Change
+                <div className="flex justify-between items-center mb-8 border-b pb-4">
+                  <h3 className="text-xl font-bold text-slate-800">
+                    Account Details
+                  </h3>
+                  {/* Toggle Edit Button */}
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className={`px-5 py-2 rounded-lg text-sm font-bold transition ${
+                      isEditing
+                        ? "bg-gray-200 text-gray-700"
+                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                    }`}
+                  >
+                    {isEditing ? "Cancel Edit" : "Edit Profile ✏️"}
                   </button>
                 </div>
+
+                <form onSubmit={handleUpdateProfile} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Name Input */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                        Full Name
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                          value={profileData.name}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              name: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 text-gray-700 font-medium">
+                          {profileData.name}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Username Input */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                        Username
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                          value={profileData.username}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              username: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 text-gray-700 font-medium">
+                          {profileData.username}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Email Input */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                      Email Address
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                        value={profileData.email}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            email: e.target.value,
+                          })
+                        }
+                      />
+                    ) : (
+                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 text-gray-700 font-medium">
+                        {profileData.email || "No Email Found"}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Password Fields */}
+                  {isEditing && (
+                    <div className="pt-4 border-t border-gray-100 animate-fade-in">
+                      <p className="text-sm text-amber-600 font-bold mb-4">
+                        Change Password (Optional)
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <EyeIconShowPassword
+                          label="New Password"
+                          name="password"
+                          placeholder="Leave blank to keep current"
+                          value={profileData.password}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              password: e.target.value,
+                            })
+                          }
+                        />
+                        <EyeIconShowPassword
+                          label="Confirm New Password"
+                          name="confirmPassword"
+                          placeholder="Confirm new password"
+                          value={profileData.confirmPassword}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              confirmPassword: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {isEditing && (
+                    <div className="flex justify-end gap-4 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="px-6 py-2.5 rounded-lg font-bold text-gray-600 hover:bg-gray-100 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-2.5 rounded-lg font-bold shadow-md transition transform hover:-translate-y-0.5"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  )}
+                </form>
               </div>
             </div>
           )}
@@ -217,7 +380,7 @@ const UserDashboard = () => {
   );
 };
 
-// --- Reusable Components for User Dashboard ---
+// --- Reusable Components ---
 
 const SidebarBtn = ({ label, icon, isActive, onClick }) => (
   <button
