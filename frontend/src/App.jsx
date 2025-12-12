@@ -8,12 +8,15 @@ import {
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 
+// --- IMPORT COMPONENTS ---
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import StaffDashboard from "./pages/dashboard/staff/StaffDashboard";
+import UserDashboard from "./pages/dashboard/user/UserDashboard";
 import Home from "./pages/dashboard/home/Home";
 
+// --- PROTECTED ROUTE COMPONENT ---
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
 
@@ -29,14 +32,13 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
+// --- APP ROUTES ---
 const AppRoutes = () => {
   const { user } = useContext(AuthContext);
-
-  // Helper function to decide where to redirect logged-in users
   const getDashboardRoute = (role) => {
     if (role === "admin") return "/admin-dashboard";
     if (role === "staff") return "/staff-dashboard";
-    return "/";
+    return "/dashboard";
   };
 
   return (
@@ -52,7 +54,7 @@ const AppRoutes = () => {
 
       <Route path="/register" element={<Register />} />
 
-      {/* ADMIN ROUTE */}
+      {/* --- ADMIN ROUTE --- */}
       <Route
         path="/admin-dashboard"
         element={
@@ -62,7 +64,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* STAFF ROUTE (NEW) */}
+      {/* --- STAFF ROUTE --- */}
       <Route
         path="/staff-dashboard"
         element={
@@ -72,21 +74,17 @@ const AppRoutes = () => {
         }
       />
 
-      {/* CUSTOMER/DEFAULT DASHBOARD */}
+      {/* --- CUSTOMER ROUTE  --- */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute allowedRoles={["customer"]}>
-            <div className="p-10">
-              <h1>User Dashboard</h1>
-              <a href="/" className="text-blue-500">
-                Go Home
-              </a>
-            </div>
+            <UserDashboard />
           </ProtectedRoute>
         }
       />
 
+      {/* Catch all - Redirect to Home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

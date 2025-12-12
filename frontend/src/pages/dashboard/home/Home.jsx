@@ -157,7 +157,7 @@ const Home = () => {
           </p>
         </div>
 
-        {/* Booking Bar (Dates Set to Today/Tomorrow) */}
+        {/* Booking Bar  */}
         <div className="absolute bottom-10 left-0 w-full z-20 flex justify-center px-4 animate-fade-in-up delay-500">
           <div className="bg-white/90 backdrop-blur-md p-2 md:p-4 rounded-full shadow-2xl flex flex-col md:flex-row gap-2 md:gap-6 items-center border border-white/50">
             {/* CHECK IN */}
@@ -217,7 +217,7 @@ const Home = () => {
         </p>
       </div>
 
-      {/* --- NEW LUXURY FOOTER --- */}
+      {/* --- FOOTER --- */}
       <footer className="bg-slate-900 text-gray-300 pt-16 pb-8">
         <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand Column */}
