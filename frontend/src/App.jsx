@@ -8,7 +8,7 @@ import {
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 
-// --- IMPORT COMPONENTS ---
+// Import Components
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
@@ -16,7 +16,7 @@ import StaffDashboard from "./pages/dashboard/staff/StaffDashboard";
 import UserDashboard from "./pages/dashboard/user/UserDashboard";
 import Home from "./pages/dashboard/home/Home";
 
-// --- PROTECTED ROUTE COMPONENT ---
+// Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useContext(AuthContext);
 
@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // Role Check
+  // Check role permission
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }
@@ -32,19 +32,20 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-// --- APP ROUTES ---
+// App Routes Logic
 const AppRoutes = () => {
   const { user } = useContext(AuthContext);
+
+  // Determine redirect path based on role
   const getDashboardRoute = (role) => {
     if (role === "admin") return "/admin-dashboard";
     if (role === "staff") return "/staff-dashboard";
-    return "/dashboard";
+    return "/";
   };
 
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-
       <Route
         path="/login"
         element={
@@ -54,7 +55,7 @@ const AppRoutes = () => {
 
       <Route path="/register" element={<Register />} />
 
-      {/* --- ADMIN ROUTE --- */}
+      {/* Admin Route */}
       <Route
         path="/admin-dashboard"
         element={
@@ -64,7 +65,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* --- STAFF ROUTE --- */}
+      {/* Staff Route */}
       <Route
         path="/staff-dashboard"
         element={
@@ -74,7 +75,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* --- CUSTOMER ROUTE  --- */}
+      {/* Customer Dashboard Route */}
       <Route
         path="/dashboard"
         element={
@@ -84,7 +85,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Catch all - Redirect to Home */}
+      {/* Catch-all Redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
