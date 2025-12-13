@@ -11,6 +11,7 @@ import { AuthProvider, AuthContext } from "./context/AuthContext";
 // Import Components
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
+import ForgotPassword from "./components/auth/ForgotPassword";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import StaffDashboard from "./pages/dashboard/staff/StaffDashboard";
 import UserDashboard from "./pages/dashboard/user/UserDashboard";
@@ -54,6 +55,7 @@ const AppRoutes = () => {
       />
 
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Admin Route */}
       <Route

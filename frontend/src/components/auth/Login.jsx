@@ -113,6 +113,16 @@ const Login = () => {
                 onChange={onChange}
                 placeholder="Enter your password"
               />
+
+              {/* Forgot Password Link  */}
+              <div className="flex justify-end mt-2">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-amber-400 hover:text-amber-300 font-semibold transition hover:underline"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
             </div>
 
             {/* Submit Button */}
