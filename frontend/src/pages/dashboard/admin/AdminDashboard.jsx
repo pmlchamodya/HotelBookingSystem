@@ -8,6 +8,7 @@ import {
 } from "../../../components/alert/ToastContext";
 import api from "../../../config/api";
 import EyeIconShowPassword from "../../../components/icon/Eyeiconshowpassword";
+import AdminBooking from "./AdminBooking";
 
 const AdminDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -178,7 +179,8 @@ const AdminDashboard = () => {
           <SidebarBtn
             label="Bookings"
             icon="📅"
-            onClick={() => alert("Member 3 Work")}
+            isActive={activeTab === "bookings"}
+            onClick={() => setActiveTab("bookings")}
           />
           <SidebarBtn
             label="Facilities"
@@ -436,6 +438,12 @@ const AdminDashboard = () => {
                   isStaffView={true}
                 />
               </div>
+            </div>
+          )}
+          {/* VIEW 4: BOOKINGS MANAGEMENT */}
+          {activeTab === "bookings" && (
+            <div className="animate-fade-in">
+              <AdminBooking />
             </div>
           )}
         </div>

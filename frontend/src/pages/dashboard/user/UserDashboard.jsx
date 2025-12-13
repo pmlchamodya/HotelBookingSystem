@@ -7,6 +7,7 @@ import {
 } from "../../../components/alert/ToastContext";
 import api from "../../../config/api";
 import EyeIconShowPassword from "../../../components/icon/Eyeiconshowpassword";
+import UserMyBookings from "./UserMyBookings";
 
 const UserDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -203,23 +204,7 @@ const UserDashboard = () => {
           )}
 
           {/* --- MY BOOKINGS SECTION --- */}
-          {activeTab === "bookings" && (
-            <div className="animate-fade-in">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center py-20">
-                <div className="text-6xl mb-6 opacity-20">📅</div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  My Bookings
-                </h3>
-                <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                  Your booking history and upcoming reservations will appear
-                  here.
-                </p>
-                <div className="inline-block px-6 py-3 bg-gray-100 rounded-lg text-sm text-gray-600 font-mono border border-gray-200">
-                  Coming Soon...
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === "bookings" && <UserMyBookings />}
 
           {/* --- MY PROFILE SECTION  --- */}
           {activeTab === "profile" && (
