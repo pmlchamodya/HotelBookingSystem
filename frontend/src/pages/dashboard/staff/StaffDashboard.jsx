@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { notifySuccess } from "../../../components/alert/ToastContext";
 import StaffBooking from "./StaffBooking";
 import StaffInquiry from "./StaffInquiry";
+import StaffRooms from "./StaffRooms";
 
 const StaffDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -49,6 +50,16 @@ const StaffDashboard = () => {
           </p>
 
           <button
+            onClick={() => setActiveTab("rooms")}
+            className={`w-full text-left px-5 py-3.5 rounded-xl font-medium transition-all duration-300 flex items-center gap-3 ${
+              activeTab === "rooms"
+                ? "bg-green-700 text-white shadow-lg shadow-green-900/50 translate-x-1"
+                : "text-green-100 hover:bg-green-800/50 hover:translate-x-1"
+            }`}
+          >
+            <span className="text-xl">🏨</span> Rooms
+          </button>
+          <button
             onClick={() => setActiveTab("bookings")}
             className={`w-full text-left px-5 py-3.5 rounded-xl font-medium transition-all duration-300 flex items-center gap-3 ${
               activeTab === "bookings"
@@ -83,7 +94,7 @@ const StaffDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-800 capitalize">
             {activeTab === "dashboard"
               ? "Staff Workspace"
-              : "Bookings Management"}
+              : `${activeTab} Management`}
           </h1>
           <div className="bg-green-50 px-4 py-2 rounded-lg text-green-900 font-medium shadow-sm border border-green-100">
             User: <span className="font-bold">{user?.username}</span> (Staff)
@@ -115,6 +126,12 @@ const StaffDashboard = () => {
           </div>
         )}
 
+        {/* ---  ROOMS MANAGEMENT --- */}
+        {activeTab === "rooms" && (
+          <div className="animate-fade-in">
+            <StaffRooms />
+          </div>
+        )}
         {/* ---  BOOKINGS MANAGEMENT --- */}
         {activeTab === "bookings" && (
           <div className="animate-fade-in">

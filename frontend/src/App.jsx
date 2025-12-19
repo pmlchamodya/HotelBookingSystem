@@ -18,6 +18,7 @@ import UserDashboard from "./pages/dashboard/user/UserDashboard";
 import Home from "./pages/dashboard/home/Home";
 import Contact from "./pages/dashboard/home/Contact";
 import About from "./pages/dashboard/home/About";
+import Rooms from "./pages/dashboard/home/Rooms";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -51,6 +52,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Home />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/about" element={<About />} />
+      <Route path="/rooms" element={<Rooms />} />
       <Route
         path="/login"
         element={
