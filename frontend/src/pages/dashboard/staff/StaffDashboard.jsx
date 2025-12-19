@@ -3,6 +3,7 @@ import { AuthContext } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { notifySuccess } from "../../../components/alert/ToastContext";
 import StaffBooking from "./StaffBooking";
+import StaffInquiry from "./StaffInquiry";
 
 const StaffDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -59,7 +60,7 @@ const StaffDashboard = () => {
           </button>
 
           <button
-            onClick={() => alert("Member 4 Work")}
+            onClick={() => setActiveTab("inquiries")}
             className="w-full text-left px-5 py-3.5 rounded-xl font-medium text-green-100 hover:bg-green-800/50 hover:translate-x-1 transition-all flex items-center gap-3"
           >
             <span className="text-xl">📩</span> Inquiries
@@ -118,6 +119,12 @@ const StaffDashboard = () => {
         {activeTab === "bookings" && (
           <div className="animate-fade-in">
             <StaffBooking />
+          </div>
+        )}
+        {/* ---  INQUIRIES MANAGEMENT --- */}
+        {activeTab === "inquiries" && (
+          <div className="animate-fade-in">
+            <StaffInquiry />
           </div>
         )}
       </main>

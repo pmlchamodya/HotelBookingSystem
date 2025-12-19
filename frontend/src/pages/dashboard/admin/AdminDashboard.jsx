@@ -9,6 +9,7 @@ import {
 import api from "../../../config/api";
 import EyeIconShowPassword from "../../../components/icon/Eyeiconshowpassword";
 import AdminBooking from "./AdminBooking";
+import AdminInquiry from "./AdminInquiry";
 
 const AdminDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -194,7 +195,8 @@ const AdminDashboard = () => {
           <SidebarBtn
             label="Inquiries"
             icon="📩"
-            onClick={() => alert("Member 4 Work")}
+            isActive={activeTab === "inquiries"}
+            onClick={() => setActiveTab("inquiries")}
           />
           <SidebarBtn
             label="Reviews"
@@ -444,6 +446,12 @@ const AdminDashboard = () => {
           {activeTab === "bookings" && (
             <div className="animate-fade-in">
               <AdminBooking />
+            </div>
+          )}
+          {/* VIEW 5: INQUIRIES MANAGEMENT */}
+          {activeTab === "inquiries" && (
+            <div className="animate-fade-in">
+              <AdminInquiry />
             </div>
           )}
         </div>
