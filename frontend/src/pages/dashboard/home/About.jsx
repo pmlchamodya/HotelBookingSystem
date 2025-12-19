@@ -58,6 +58,12 @@ const About = () => {
             Rooms
           </Link>
           <Link
+            to="/facilities"
+            className="hover:text-amber-400 transition hover:scale-105 transform duration-200"
+          >
+            Facilities
+          </Link>
+          <Link
             to="/about"
             className="text-amber-400 font-bold border-b-2 border-amber-400 pb-1"
           >
