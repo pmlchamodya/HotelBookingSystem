@@ -19,6 +19,7 @@ import Home from "./pages/dashboard/home/Home";
 import Contact from "./pages/dashboard/home/Contact";
 import About from "./pages/dashboard/home/About";
 import Rooms from "./pages/dashboard/home/Rooms";
+import Booking from "./pages/dashboard/home/Booking";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -53,6 +54,7 @@ const AppRoutes = () => {
       <Route path="/contact" element={<Contact />} />
       <Route path="/about" element={<About />} />
       <Route path="/rooms" element={<Rooms />} />
+      <Route path="/booking/:id" element={<Booking />} />
       <Route
         path="/login"
         element={

@@ -130,16 +130,18 @@ const Home = () => {
 
                   {/* My Bookings Link */}
                   {user.role === "customer" && (
-                    <Link
-                      to="/dashboard"
-                      className="px-5 py-3 text-sm text-gray-200 hover:bg-white/10 hover:text-amber-400 transition flex items-center gap-3"
-                      onClick={() => setIsDropdownOpen(false)}
+                    <button
+                      onClick={() => {
+                        navigate("/dashboard", {
+                          state: { activeTab: "bookings" },
+                        });
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-5 py-3 text-sm text-gray-200 hover:bg-white/10 hover:text-amber-400 transition flex items-center gap-3"
                     >
                       <span>📅</span> My Bookings
-                    </Link>
+                    </button>
                   )}
-
-                  <div className="border-t border-white/10 my-1"></div>
 
                   {/* Logout Button */}
                   <button

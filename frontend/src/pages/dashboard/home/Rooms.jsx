@@ -247,6 +247,7 @@ const Rooms = () => {
 
                       <button
                         disabled={!room.is_available}
+                        onClick={() => navigate(`/booking/${room._id}`)}
                         className={`w-full py-4 rounded-xl font-bold tracking-wider text-sm transition-all shadow-lg ${
                           room.is_available
                             ? "bg-slate-900 text-white hover:bg-amber-600 hover:shadow-amber-500/30"
