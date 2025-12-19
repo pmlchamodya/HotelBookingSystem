@@ -104,6 +104,12 @@ const Contact = () => {
             Rooms
           </Link>
           <Link
+            to="/facilities"
+            className="hover:text-amber-400 transition hover:scale-105 transform duration-200"
+          >
+            Facilities
+          </Link>
+          <Link
             to="/about"
             className="hover:text-amber-400 transition hover:scale-105 transform duration-200"
           >
