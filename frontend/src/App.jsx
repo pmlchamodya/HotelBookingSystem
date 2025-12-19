@@ -16,6 +16,8 @@ import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import StaffDashboard from "./pages/dashboard/staff/StaffDashboard";
 import UserDashboard from "./pages/dashboard/user/UserDashboard";
 import Home from "./pages/dashboard/home/Home";
+import Contact from "./pages/dashboard/home/Contact";
+import About from "./pages/dashboard/home/About";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -47,6 +49,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/about" element={<About />} />
       <Route
         path="/login"
         element={

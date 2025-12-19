@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
 import userRoutes from "./routes/user.js";
 import bookingRoutes from "./routes/booking.js";
+import inquiryRoutes from "./routes/inquiry.js";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/inquiries", inquiryRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
