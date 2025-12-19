@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   notifySuccess,
   notifyError,
@@ -12,7 +12,10 @@ import UserMyBookings from "./UserMyBookings";
 const UserDashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(
+    location.state?.activeTab || "overview"
+  );
 
   // --- STATE: Edit Mode ---
   const [isEditing, setIsEditing] = useState(false);
