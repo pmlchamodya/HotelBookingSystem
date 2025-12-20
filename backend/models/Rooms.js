@@ -9,6 +9,11 @@ const roomSchema = new mongoose.Schema(
     capacity: { type: Number, required: true },
     image: { type: String },
     is_available: { type: Boolean, default: true },
+    status: {
+      type: String,
+      enum: ["Available", "Maintenance", "Booked"],
+      default: "Available",
+    },
   },
   { timestamps: true }
 );

@@ -45,6 +45,20 @@ const Rooms = () => {
     navigate("/");
   };
 
+  // --- HELPER: Status Label Logic ---
+  const getStatusLabel = (room) => {
+    if (room.status === "Booked") return "SOLD OUT";
+    if (room.status === "Maintenance") return "MAINTENANCE";
+    return "UNAVAILABLE";
+  };
+
+  const getStatusColor = (room) => {
+    if (room.status === "Booked") return "border-red-500 bg-red-600/80";
+    if (room.status === "Maintenance")
+      return "border-orange-500 bg-orange-600/80";
+    return "border-gray-500 bg-gray-600/80";
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-sans bg-slate-50">
       {/* --- NAVBAR --- */}
@@ -210,10 +224,16 @@ const Rooms = () => {
                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-slate-900 shadow-lg">
                       {room.type}
                     </div>
+
+                    {/* --- UPDATED OVERLAY LOGIC --- */}
                     {!room.is_available && (
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <span className="text-white font-bold border-2 border-white px-4 py-2 rounded uppercase tracking-widest">
-                          Maintenance
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                        <span
+                          className={`text-white font-bold border-2 px-6 py-3 rounded-lg uppercase tracking-[0.2em] shadow-2xl transform rotate-[-5deg] ${getStatusColor(
+                            room
+                          )}`}
+                        >
+                          {getStatusLabel(room)}
                         </span>
                       </div>
                     )}
@@ -251,16 +271,17 @@ const Rooms = () => {
                         </div>
                       </div>
 
+                      {/* Button changes based on status */}
                       <button
                         disabled={!room.is_available}
                         onClick={() => navigate(`/booking/${room._id}`)}
                         className={`w-full py-4 rounded-xl font-bold tracking-wider text-sm transition-all shadow-lg ${
                           room.is_available
                             ? "bg-slate-900 text-white hover:bg-amber-600 hover:shadow-amber-500/30"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                         }`}
                       >
-                        {room.is_available ? "BOOK NOW" : "UNAVAILABLE"}
+                        {room.is_available ? "BOOK NOW" : getStatusLabel(room)}
                       </button>
                     </div>
                   </div>
