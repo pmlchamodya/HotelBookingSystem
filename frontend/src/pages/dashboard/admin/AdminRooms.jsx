@@ -21,7 +21,7 @@ const AdminRooms = () => {
     capacity: "",
     description: "",
     image: "",
-    is_available: true,
+    status: "Available",
   });
 
   // --- Fetch Rooms ---
@@ -43,11 +43,8 @@ const AdminRooms = () => {
 
   // --- Handle Input Change ---
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   // --- Handle Image Upload ---
@@ -67,7 +64,10 @@ const AdminRooms = () => {
     if (room) {
       setIsEditing(true);
       setEditId(room._id);
-      setFormData(room);
+      setFormData({
+        ...room,
+        status: room.status || (room.is_available ? "Available" : "Booked"),
+      });
     } else {
       setIsEditing(false);
       setFormData({
@@ -77,7 +77,7 @@ const AdminRooms = () => {
         capacity: "",
         description: "",
         image: "",
-        is_available: true,
+        status: "Available",
       });
     }
     setShowModal(true);
@@ -86,12 +86,18 @@ const AdminRooms = () => {
   // --- Submit Form ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const payload = {
+      ...formData,
+      is_available: formData.status === "Available",
+    };
+
     try {
       if (isEditing) {
-        await api.put(`/rooms/${editId}`, formData);
+        await api.put(`/rooms/${editId}`, payload);
         notifySuccess("Room updated successfully!");
       } else {
-        await api.post("/rooms", formData);
+        await api.post("/rooms", payload);
         notifySuccess("Room added successfully!");
       }
       setShowModal(false);
@@ -111,16 +117,29 @@ const AdminRooms = () => {
         setRooms(rooms.filter((room) => room._id !== id));
       } catch (err) {
         console.error(err);
-        notifyError("Failed to delete room. Only Admins can delete.");
+        notifyError("Failed to delete room.");
       }
     });
+  };
+
+  // --- Helper for Status Colors ---
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "Available":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "Maintenance":
+        return "bg-orange-100 text-orange-700 border-orange-200";
+      case "Booked":
+        return "bg-red-100 text-red-700 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
   };
 
   if (loading) return <div className="p-10 text-center">Loading Rooms...</div>;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
           <span>🏨</span> Room Management
@@ -133,7 +152,6 @@ const AdminRooms = () => {
         </button>
       </div>
 
-      {/* Rooms Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -163,13 +181,13 @@ const AdminRooms = () => {
                 </td>
                 <td className="p-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      room.is_available
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusBadge(
+                      room.status ||
+                        (room.is_available ? "Available" : "Booked")
+                    )}`}
                   >
-                    {room.is_available ? "Available" : "Maintenance"}
+                    {room.status ||
+                      (room.is_available ? "Available" : "Booked")}
                   </span>
                 </td>
                 <td className="p-4 text-right flex justify-end gap-2">
@@ -190,9 +208,6 @@ const AdminRooms = () => {
             ))}
           </tbody>
         </table>
-        {rooms.length === 0 && (
-          <div className="text-center py-10 text-gray-400">No rooms found.</div>
-        )}
       </div>
 
       {/* --- ADD / EDIT MODAL --- */}
@@ -212,7 +227,6 @@ const AdminRooms = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Name & Type */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1">
@@ -225,7 +239,6 @@ const AdminRooms = () => {
                     value={formData.name}
                     onChange={handleChange}
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    placeholder="e.g. Ocean View Suite"
                   />
                 </div>
                 <div>
@@ -242,11 +255,12 @@ const AdminRooms = () => {
                     <option value="Double">Double</option>
                     <option value="Suite">Suite</option>
                     <option value="Family">Family</option>
+                    <option value="Villa">Villa</option>
+                    <option value="Cabana">Cabana</option>
                   </select>
                 </div>
               </div>
 
-              {/* Price & Capacity */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1">
@@ -259,7 +273,6 @@ const AdminRooms = () => {
                     value={formData.price}
                     onChange={handleChange}
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    placeholder="15000"
                   />
                 </div>
                 <div>
@@ -273,52 +286,60 @@ const AdminRooms = () => {
                     value={formData.capacity}
                     onChange={handleChange}
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    placeholder="2"
                   />
                 </div>
               </div>
 
-              {/* Image Selection (URL or Upload) */}
+              {/* Status Dropdown */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-1">
-                  Room Image
+                  Current Status
                 </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded-lg focus:ring-2 outline-none font-bold ${
+                    formData.status === "Available"
+                      ? "text-green-600 bg-green-50 border-green-200"
+                      : formData.status === "Maintenance"
+                      ? "text-orange-600 bg-orange-50 border-orange-200"
+                      : "text-red-600 bg-red-50 border-red-200"
+                  }`}
+                >
+                  <option value="Available">🟢 Available</option>
+                  <option value="Maintenance">🟠 Maintenance</option>
+                  <option value="Booked">🔴 Booked / Unavailable</option>
+                </select>
+                <p className="text-xs text-gray-400 mt-1">
+                  * Selecting 'Maintenance' or 'Booked' will hide booking
+                  options for customers.
+                </p>
+              </div>
 
-                {/* Option 1: URL */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">
+                  Room Image URL
+                </label>
                 <input
                   type="text"
                   name="image"
                   value={formData.image}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none mb-2"
-                  placeholder="Paste Image URL here..."
+                  className="w-full p-2 border rounded-lg outline-none mb-2"
+                  placeholder="Image URL..."
                 />
-
                 <div className="text-center text-xs text-gray-400 mb-2">
                   - OR -
                 </div>
-
-                {/* Option 2: Upload */}
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
+                  className="w-full text-sm text-gray-500"
                 />
-
-                {/* Preview */}
-                {formData.image && (
-                  <div className="mt-2">
-                    <img
-                      src={formData.image}
-                      alt="Preview"
-                      className="w-full h-32 object-cover rounded-lg border"
-                    />
-                  </div>
-                )}
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-1">
                   Description
@@ -328,30 +349,10 @@ const AdminRooms = () => {
                   rows="3"
                   value={formData.description}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                  placeholder="Room details..."
+                  className="w-full p-2 border rounded-lg outline-none"
                 ></textarea>
               </div>
 
-              {/* Availability Checkbox */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="is_available"
-                  id="is_available"
-                  checked={formData.is_available}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-amber-600 rounded focus:ring-amber-500"
-                />
-                <label
-                  htmlFor="is_available"
-                  className="text-sm font-bold text-gray-700"
-                >
-                  Available for Booking
-                </label>
-              </div>
-
-              {/* Buttons */}
               <div className="pt-4 flex justify-end gap-3">
                 <button
                   type="button"
