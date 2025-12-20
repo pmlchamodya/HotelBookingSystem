@@ -90,8 +90,9 @@ const Home = () => {
         searchData: {
           checkInDate,
           checkOutDate,
-          guests: guestCounts.adults + guestCounts.children,
-          roomCount: guestCounts.rooms,
+          rooms: guestCounts.rooms,
+          adults: guestCounts.adults,
+          children: guestCounts.children,
         },
       },
     });
