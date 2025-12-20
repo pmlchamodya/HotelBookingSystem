@@ -1,7 +1,10 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../context/AuthContext";
-import { notifySuccess } from "../../../components/alert/ToastContext";
+import {
+  notifySuccess,
+  notifyError,
+} from "../../../components/alert/ToastContext";
 import hotelVideo from "../../../assets/video/hotel-video.mp4";
 
 const Home = () => {
@@ -10,11 +13,26 @@ const Home = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  // --- GUEST POPUP STATES ---
+  const [showGuestPopup, setShowGuestPopup] = useState(false);
+  const [guestCounts, setGuestCounts] = useState({
+    rooms: 1,
+    adults: 1,
+    children: 0,
+  });
+
+  // Ref to detect clicks outside the popup
+  const popupRef = useRef(null);
+
   // --- DATE LOGIC ---
   const today = new Date().toISOString().split("T")[0];
   const nextDay = new Date();
   nextDay.setDate(nextDay.getDate() + 1);
   const tomorrow = nextDay.toISOString().split("T")[0];
+
+  // Dates State
+  const [checkInDate, setCheckInDate] = useState(today);
+  const [checkOutDate, setCheckOutDate] = useState(tomorrow);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +42,35 @@ const Home = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // --- HANDLE CLICK OUTSIDE POPUP ---
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        setShowGuestPopup(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // --- HANDLE GUEST COUNT CHANGES ---
+  const updateCount = (type, operation) => {
+    setGuestCounts((prev) => {
+      const current = prev[type];
+      let newValue = current;
+
+      if (operation === "increment") {
+        newValue = current + 1;
+      } else {
+        if (type === "children" && current > 0) newValue = current - 1;
+        if ((type === "rooms" || type === "adults") && current > 1)
+          newValue = current - 1;
+      }
+
+      return { ...prev, [type]: newValue };
+    });
+  };
+
   const handleLogout = () => {
     logout();
     notifySuccess("Logged out successfully!");
@@ -31,8 +78,28 @@ const Home = () => {
     navigate("/");
   };
 
+  // --- HANDLE SEARCH FUNCTION ---
+  const handleSearch = () => {
+    if (new Date(checkInDate) >= new Date(checkOutDate)) {
+      notifyError("Check-out date must be after check-in date!");
+      return;
+    }
+
+    navigate("/rooms", {
+      state: {
+        searchData: {
+          checkInDate,
+          checkOutDate,
+          guests: guestCounts.adults + guestCounts.children,
+          roomCount: guestCounts.rooms,
+        },
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-sans">
+      {/* --- NAVBAR --- */}
       <nav
         className={`fixed w-full z-50 transition-all duration-500 ease-in-out border-b border-white/10 ${
           scrolled
@@ -44,13 +111,11 @@ const Home = () => {
           className="flex items-center cursor-pointer group"
           onClick={() => navigate("/")}
         >
-          {/* Logo */}
           <span className="text-2xl font-bold tracking-widest uppercase text-white group-hover:text-amber-400 transition-colors duration-300">
             🏨 King of Asia
           </span>
         </div>
 
-        {/* Center Links */}
         <div className="hidden md:flex gap-8 font-medium text-sm tracking-wider text-gray-200">
           <Link
             to="/"
@@ -87,7 +152,6 @@ const Home = () => {
         <div>
           {user ? (
             <div className="relative">
-              {/* User Button */}
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className={`flex items-center gap-2 px-5 py-2 rounded-full font-semibold border transition-all duration-300 focus:outline-none ${
@@ -105,11 +169,8 @@ const Home = () => {
                   ▼
                 </span>
               </button>
-
-              {/* --- DROPDOWN MENU --- */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-3 w-60 bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-2xl py-2 border border-white/10 z-50 overflow-hidden animate-fade-in origin-top-right">
-                  {/* User Info Header */}
                   <div className="px-5 py-3 border-b border-white/10">
                     <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">
                       Signed in as
@@ -118,8 +179,6 @@ const Home = () => {
                       {user.username}
                     </p>
                   </div>
-
-                  {/* Dashboard Link */}
                   <Link
                     to={
                       user.role === "admin"
@@ -133,23 +192,6 @@ const Home = () => {
                   >
                     <span>📊</span> Dashboard
                   </Link>
-
-                  {/* My Bookings Link */}
-                  {user.role === "customer" && (
-                    <button
-                      onClick={() => {
-                        navigate("/dashboard", {
-                          state: { activeTab: "bookings" },
-                        });
-                        setIsDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-5 py-3 text-sm text-gray-200 hover:bg-white/10 hover:text-amber-400 transition flex items-center gap-3"
-                    >
-                      <span>📅</span> My Bookings
-                    </button>
-                  )}
-
-                  {/* Logout Button */}
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-5 py-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition flex items-center gap-3"
@@ -160,7 +202,6 @@ const Home = () => {
               )}
             </div>
           ) : (
-            // Login Button
             <Link
               to="/login"
               className="px-6 py-2 rounded-full font-medium text-sm tracking-wide transition-all shadow-lg border border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-amber-400 hover:text-amber-400 backdrop-blur-md"
@@ -172,22 +213,22 @@ const Home = () => {
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <div className="relative h-screen w-full overflow-hidden">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute top-0 left-0 w-full h-full object-cover"
-          // poster="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1920"
-        >
-          <source src={hotelVideo} type="video/mp4" />
-        </video>
+      <div className="relative h-screen w-full">
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute top-0 left-0 w-full h-full object-cover"
+          >
+            <source src={hotelVideo} type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-black/40"></div>
+        </div>
 
-        <div className="absolute inset-0 bg-black/40"></div>
-
-        {/* Hero Content */}
-        <div className="absolute inset-0 flex flex-col justify-center items-center text-center text-white px-4 z-10">
+        {/* Hero Text Content */}
+        <div className="absolute inset-0 flex flex-col justify-center items-center text-center text-white px-4 z-10 pointer-events-none">
           <h2 className="text-sm md:text-lg font-medium tracking-[0.4em] mb-4 uppercase animate-fade-in-up text-amber-300">
             Welcome to Paradise
           </h2>
@@ -200,9 +241,9 @@ const Home = () => {
           </p>
         </div>
 
-        {/* Booking Bar */}
-        <div className="absolute bottom-10 left-0 w-full z-20 flex justify-center px-4 animate-fade-in-up delay-500">
-          <div className="bg-white/95 backdrop-blur-xl p-3 md:p-5 rounded-full shadow-2xl flex flex-col md:flex-row gap-4 items-center border border-white/50">
+        {/* --- BOOKING BAR (Search Box) --- */}
+        <div className="absolute bottom-10 left-0 w-full z-50 flex justify-center px-4 animate-fade-in-up delay-500">
+          <div className="bg-white/95 backdrop-blur-xl p-3 md:p-5 rounded-full shadow-2xl flex flex-col md:flex-row gap-4 items-center border border-white/50 relative">
             {/* CHECK IN */}
             <div className="px-4 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-auto">
               <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">
@@ -210,7 +251,8 @@ const Home = () => {
               </label>
               <input
                 type="date"
-                defaultValue={today}
+                value={checkInDate}
+                onChange={(e) => setCheckInDate(e.target.value)}
                 min={today}
                 className="bg-transparent outline-none text-slate-800 font-bold text-sm w-full cursor-pointer"
               />
@@ -223,23 +265,110 @@ const Home = () => {
               </label>
               <input
                 type="date"
-                defaultValue={tomorrow}
-                min={tomorrow}
+                value={checkOutDate}
+                onChange={(e) => setCheckOutDate(e.target.value)}
+                min={checkInDate}
                 className="bg-transparent outline-none text-slate-800 font-bold text-sm w-full cursor-pointer"
               />
             </div>
 
-            <div className="px-4 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-auto min-w-[150px]">
+            {/* GUESTS POPUP */}
+            <div
+              className="px-4 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-auto min-w-[200px] relative"
+              ref={popupRef}
+            >
               <label className="block text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">
-                Guests
+                Guests & Rooms
               </label>
-              <select className="bg-transparent outline-none text-slate-800 font-bold text-sm w-full cursor-pointer">
-                <option>2 Adults</option>
-                <option>1 Adult</option>
-                <option>Family (2A, 2C)</option>
-              </select>
+              <button
+                onClick={() => setShowGuestPopup(!showGuestPopup)}
+                className="bg-transparent outline-none text-slate-800 font-bold text-sm w-full text-left flex justify-between items-center"
+              >
+                <span>
+                  {guestCounts.rooms} Room, {guestCounts.adults} Adt,{" "}
+                  {guestCounts.children} Chd
+                </span>
+                <span className="text-xs ml-2">▼</span>
+              </button>
+
+              {/* POPUP BOX */}
+              {showGuestPopup && (
+                <div className="absolute top-[120%] left-0 w-72 bg-white rounded-xl shadow-2xl border-2 border-gray-200 p-5 z-[60] animate-fade-in text-slate-800">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-sm font-bold text-gray-700">
+                      Rooms
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => updateCount("rooms", "decrement")}
+                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-amber-100 flex items-center justify-center font-bold text-gray-600 hover:text-amber-600 transition"
+                      >
+                        -
+                      </button>
+                      <span className="w-4 text-center text-sm font-bold">
+                        {guestCounts.rooms}
+                      </span>
+                      <button
+                        onClick={() => updateCount("rooms", "increment")}
+                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-amber-100 flex items-center justify-center font-bold text-gray-600 hover:text-amber-600 transition"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-sm font-bold text-gray-700">
+                      Adults
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => updateCount("adults", "decrement")}
+                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-amber-100 flex items-center justify-center font-bold text-gray-600 hover:text-amber-600 transition"
+                      >
+                        -
+                      </button>
+                      <span className="w-4 text-center text-sm font-bold">
+                        {guestCounts.adults}
+                      </span>
+                      <button
+                        onClick={() => updateCount("adults", "increment")}
+                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-amber-100 flex items-center justify-center font-bold text-gray-600 hover:text-amber-600 transition"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-gray-700">
+                      Children
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => updateCount("children", "decrement")}
+                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-amber-100 flex items-center justify-center font-bold text-gray-600 hover:text-amber-600 transition"
+                      >
+                        -
+                      </button>
+                      <span className="w-4 text-center text-sm font-bold">
+                        {guestCounts.children}
+                      </span>
+                      <button
+                        onClick={() => updateCount("children", "increment")}
+                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-amber-100 flex items-center justify-center font-bold text-gray-600 hover:text-amber-600 transition"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <button className="bg-slate-900 text-white px-8 py-3.5 rounded-full font-bold text-sm tracking-wide hover:bg-amber-600 transition-colors shadow-lg w-full md:w-auto">
+
+            {/* BUTTON */}
+            <button
+              onClick={handleSearch}
+              className="bg-slate-900 text-white px-8 py-3.5 rounded-full font-bold text-sm tracking-wide hover:bg-amber-600 transition-colors shadow-lg w-full md:w-auto"
+            >
               CHECK AVAILABILITY
             </button>
           </div>
@@ -247,7 +376,7 @@ const Home = () => {
       </div>
 
       {/* Intro Section */}
-      <div className="py-24 px-6 md:px-20 bg-gray-50 text-center">
+      <div className="py-24 px-6 md:px-20 bg-gray-50 text-center relative z-10">
         <h3 className="text-amber-600 font-bold tracking-widest uppercase mb-4 text-xs">
           Our Philosophy
         </h3>
@@ -261,10 +390,9 @@ const Home = () => {
         </p>
       </div>
 
-      {/* --- FOOTER --- */}
+      {/* Footer */}
       <footer className="bg-slate-950 text-gray-400 pt-20 pb-10 border-t-4 border-amber-600">
         <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-          {/* Brand Column */}
           <div>
             <div className="flex flex-col mb-6">
               <span className="text-2xl font-serif font-bold text-white tracking-widest">
@@ -279,8 +407,6 @@ const Home = () => {
               unmatched luxury and Sri Lankan hospitality.
             </p>
           </div>
-
-          {/* Quick Links */}
           <div>
             <h3 className="text-white font-bold uppercase tracking-widest mb-6 text-xs">
               Explore
@@ -311,8 +437,6 @@ const Home = () => {
               </li>
             </ul>
           </div>
-
-          {/* Contact Info */}
           <div>
             <h3 className="text-white font-bold uppercase tracking-widest mb-6 text-xs">
               Contact Us
@@ -332,8 +456,6 @@ const Home = () => {
               </li>
             </ul>
           </div>
-
-          {/* Newsletter */}
           <div>
             <h3 className="text-white font-bold uppercase tracking-widest mb-6 text-xs">
               Newsletter
@@ -351,8 +473,6 @@ const Home = () => {
             </form>
           </div>
         </div>
-
-        {/* Copyright Bar */}
         <div className="border-t border-slate-900 pt-8 text-center text-xs text-white-600">
           <p>© 2025 King of Asia Hotels. All rights reserved.</p>
         </div>
