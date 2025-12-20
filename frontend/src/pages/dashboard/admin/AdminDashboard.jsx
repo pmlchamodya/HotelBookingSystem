@@ -11,6 +11,8 @@ import EyeIconShowPassword from "../../../components/icon/Eyeiconshowpassword";
 import AdminBooking from "./AdminBooking";
 import AdminInquiry from "./AdminInquiry";
 import AdminRooms from "./AdminRooms";
+import AdminFacilities from "./AdminFacilities";
+
 
 const AdminDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -188,7 +190,8 @@ const AdminDashboard = () => {
           <SidebarBtn
             label="Facilities"
             icon="🏊"
-            onClick={() => alert("Member 5 Work")}
+            isActive={activeTab === "facilities"}
+            onClick={() => setActiveTab("facilities")}
           />
 
           <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mt-6 mb-2">
@@ -462,6 +465,13 @@ const AdminDashboard = () => {
               <AdminRooms />
             </div>
           )}
+          {/* VIEW 7: FACILITIES MANAGEMENT */}
+{activeTab === "facilities" && (
+  <div className="animate-fade-in">
+    <AdminFacilities />
+  </div>
+)}
+
         </div>
       </main>
     </div>
