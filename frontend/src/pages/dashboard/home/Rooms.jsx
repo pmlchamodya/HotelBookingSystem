@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../../../config/api";
 import { AuthContext } from "../../../context/AuthContext";
 import { notifySuccess } from "../../../components/alert/ToastContext";
@@ -7,12 +7,20 @@ import { notifySuccess } from "../../../components/alert/ToastContext";
 const Rooms = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // --- STATES ---
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // --- GET SEARCH DATA ---
+  const searchData = location.state?.searchData;
+  const requestedRooms = searchData?.rooms || 1;
+  const requestedAdults = searchData?.adults || 1;
+  const requestedChildren = searchData?.children || 0;
+  const totalGuests = requestedAdults + requestedChildren;
 
   // --- FETCH ROOMS ---
   useEffect(() => {
@@ -45,7 +53,6 @@ const Rooms = () => {
     navigate("/");
   };
 
-  // --- HELPER: Status Label Logic ---
   const getStatusLabel = (room) => {
     if (room.status === "Booked") return "SOLD OUT";
     if (room.status === "Maintenance") return "MAINTENANCE";
@@ -58,6 +65,14 @@ const Rooms = () => {
       return "border-orange-500 bg-orange-600/80";
     return "border-gray-500 bg-gray-600/80";
   };
+
+  // --- FILTER ROOMS LOGIC ---
+  const displayedRooms = searchData
+    ? rooms.filter((room) => {
+        const requiredCapacityPerRoom = Math.ceil(totalGuests / requestedRooms);
+        return room.capacity >= requiredCapacityPerRoom;
+      })
+    : rooms;
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-slate-50">
@@ -189,10 +204,39 @@ const Rooms = () => {
           <h1 className="text-5xl md:text-7xl font-serif font-bold mb-6">
             Stay in Comfort
           </h1>
-          <p className="text-lg text-gray-200 max-w-2xl mx-auto font-light leading-relaxed">
-            Choose from our range of exquisite rooms and suites designed for
-            your ultimate relaxation.
-          </p>
+
+          {/* --- BANNER LOGIC --- */}
+          {searchData ? (
+            <div className="text-lg text-amber-200 max-w-2xl mx-auto font-bold border border-amber-500/50 p-4 rounded-lg bg-black/40 backdrop-blur flex flex-col md:flex-row gap-4 items-center justify-center">
+              <div className="flex items-center gap-2">
+                <span className="bg-amber-500/20 p-2 rounded-full text-xl">
+                  🔍
+                </span>
+                <div className="text-left">
+                  <p className="text-xs text-amber-400 uppercase tracking-wider">
+                    Results for
+                  </p>
+                  <p className="text-white">
+                    {requestedRooms} Room{requestedRooms > 1 ? "s" : ""},{" "}
+                    {requestedAdults} Adult{requestedAdults > 1 ? "s" : ""},{" "}
+                    {requestedChildren} Child
+                    {requestedChildren !== 1 ? "ren" : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="hidden md:block h-8 w-px bg-white/20"></div>
+              <div className="text-left text-sm text-gray-300">
+                {searchData.checkInDate}{" "}
+                <span className="text-amber-500">➜</span>{" "}
+                {searchData.checkOutDate}
+              </div>
+            </div>
+          ) : (
+            <p className="text-lg text-gray-200 max-w-2xl mx-auto font-light leading-relaxed">
+              Choose from our range of exquisite rooms and suites designed for
+              your ultimate relaxation.
+            </p>
+          )}
         </div>
       </div>
 
@@ -203,13 +247,25 @@ const Rooms = () => {
             <div className="text-center py-20 text-gray-500 text-xl">
               Loading Available Rooms...
             </div>
-          ) : rooms.length === 0 ? (
-            <div className="text-center py-20 text-gray-500 text-xl">
-              No rooms currently available.
+          ) : displayedRooms.length === 0 ? (
+            <div className="text-center py-20">
+              <div className="text-4xl mb-4">😕</div>
+              <h3 className="text-xl font-bold text-gray-700">
+                No rooms match your specific criteria.
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Try adjusting your guest count or room count.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-amber-600 underline font-bold hover:text-amber-700"
+              >
+                Show all rooms
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {rooms.map((room) => (
+              {displayedRooms.map((room) => (
                 <div
                   key={room._id}
                   className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 flex flex-col h-full group"
@@ -225,7 +281,6 @@ const Rooms = () => {
                       {room.type}
                     </div>
 
-                    {/* --- UPDATED OVERLAY LOGIC --- */}
                     {!room.is_available && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
                         <span
@@ -271,7 +326,6 @@ const Rooms = () => {
                         </div>
                       </div>
 
-                      {/* Button changes based on status */}
                       <button
                         disabled={!room.is_available}
                         onClick={() => navigate(`/booking/${room._id}`)}
