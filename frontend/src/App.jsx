@@ -20,6 +20,7 @@ import Contact from "./pages/dashboard/home/Contact";
 import About from "./pages/dashboard/home/About";
 import Rooms from "./pages/dashboard/home/Rooms";
 import Booking from "./pages/dashboard/home/Booking";
+import Facilities from "./pages/dashboard/home/Facilities";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -55,6 +56,7 @@ const AppRoutes = () => {
       <Route path="/about" element={<About />} />
       <Route path="/rooms" element={<Rooms />} />
       <Route path="/booking/:id" element={<Booking />} />
+      <Route path="/facilities" element={<Facilities />} />
       <Route
         path="/login"
         element={
