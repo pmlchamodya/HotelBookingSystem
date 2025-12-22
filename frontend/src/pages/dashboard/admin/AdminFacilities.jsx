@@ -1,232 +1,355 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import api from "../../../config/api";
+import {
+  notifySuccess,
+  notifyError,
+  notifyConfirm,
+} from "../../../components/alert/ToastContext";
 
 const AdminFacilities = () => {
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
 
-  useEffect(() => {
-    console.log("🔄 AdminFacilities component mounted");
-    fetchFacilities();
-  }, []);
+  // --- FORM DATA STATE  ---
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    image: "",
+    timings: "",
+    isActive: true,
+  });
 
+  // --- FETCH FACILITIES ---
   const fetchFacilities = async () => {
     try {
-      console.log("📡 Fetching facilities...");
-      const response = await axios.get("http://localhost:5000/api/facilities");
-      console.log("✅ Data received:", response.data);
-      setFacilities(response.data);
-    } catch (error) {
-      console.error("❌ Error:", error);
+      const res = await api.get("/facilities");
+      setFacilities(res.data);
+    } catch (err) {
+      console.error("Failed to fetch facilities", err);
+      notifyError("Failed to fetch facilities");
     } finally {
       setLoading(false);
     }
   };
 
-  const addTestFacility = async () => {
-    try {
-      await axios.post("http://localhost:5000/api/facilities", {
-        name: "Swimming Pool",
-        description: "Outdoor heated swimming pool with lifeguard",
-        category: "Recreation",
-        features: ["Heated pool", "Towels provided", "Lifeguard on duty"],
-        timings: "6:00 AM - 10:00 PM",
-        icon: "fas fa-swimming-pool"
+  useEffect(() => {
+    fetchFacilities();
+  }, []);
+
+  // --- HANDLE INPUT CHANGE ---
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // --- HANDLE CHECKBOX CHANGE  ---
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData({ ...formData, [name]: checked });
+  };
+
+  // --- HANDLE IMAGE UPLOAD ---
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        setFormData({ ...formData, image: reader.result });
+      };
+    }
+  };
+
+  // --- OPEN MODAL ---
+  const openModal = (facility = null) => {
+    if (facility) {
+      setIsEditing(true);
+      setEditId(facility._id);
+      setFormData({
+        name: facility.name,
+        description: facility.description,
+        image: facility.image,
+        timings: facility.timings || "",
+        isActive: facility.isActive !== undefined ? facility.isActive : true,
       });
-      fetchFacilities();
-      alert("Test facility added!");
-    } catch (error) {
-      console.error("Error:", error);
+    } else {
+      setIsEditing(false);
+      setFormData({
+        name: "",
+        description: "",
+        image: "",
+        timings: "24/7",
+        isActive: true,
+      });
     }
+    setShowModal(true);
   };
 
-  const deleteFacility = async (id) => {
-    if (window.confirm("Delete this facility?")) {
-      try {
-        await axios.delete(`http://localhost:5000/api/facilities/${id}`);
-        fetchFacilities();
-      } catch (error) {
-        console.error("Error:", error);
+  // --- SUBMIT FORM ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (isEditing) {
+        await api.put(`/facilities/${editId}`, formData);
+        notifySuccess("Facility updated successfully!");
+      } else {
+        await api.post("/facilities", formData);
+        notifySuccess("Facility added successfully!");
       }
+      setShowModal(false);
+      fetchFacilities();
+    } catch (err) {
+      console.error(err);
+      notifyError("Operation failed. Please check inputs.");
     }
   };
 
-  // If loading, show loading message
-  if (loading) {
-    return (
-      <div style={{
-        padding: "50px",
-        textAlign: "center",
-        backgroundColor: "#f8f9fa",
-        minHeight: "100vh"
-      }}>
-        <h2>Loading facilities...</h2>
-        <p>Please wait while we fetch the data</p>
-      </div>
+  // --- DELETE FACILITY ---
+  const handleDelete = (id) => {
+    notifyConfirm(
+      "Are you sure you want to delete this facility?",
+      async () => {
+        try {
+          await api.delete(`/facilities/${id}`);
+          notifySuccess("Facility deleted successfully!");
+          setFacilities(facilities.filter((f) => f._id !== id));
+        } catch (err) {
+          console.error(err);
+          notifyError("Failed to delete facility.");
+        }
+      }
     );
-  }
+  };
 
-  // If no facilities
-  if (facilities.length === 0) {
-    return (
-      <div style={{
-        padding: "50px",
-        textAlign: "center",
-        backgroundColor: "#f8f9fa",
-        minHeight: "100vh"
-      }}>
-        <h1>Facilities Management</h1>
-        <div style={{
-          backgroundColor: "white",
-          padding: "30px",
-          borderRadius: "10px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          maxWidth: "500px",
-          margin: "0 auto"
-        }}>
-          <h3>No Facilities Found</h3>
-          <p>Add your first facility to get started</p>
-          <button
-            onClick={addTestFacility}
-            style={{
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              padding: "10px 20px",
-              borderRadius: "5px",
-              cursor: "pointer",
-              marginTop: "20px"
-            }}
-          >
-            Add Test Facility
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (loading)
+    return <div className="p-10 text-center">Loading Facilities...</div>;
 
-  // Show facilities list
   return (
-    <div style={{
-      padding: "20px",
-      backgroundColor: "#f8f9fa",
-      minHeight: "100vh"
-    }}>
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "30px"
-      }}>
-        <h1 style={{ color: "#333", margin: 0 }}>Facilities Management</h1>
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 animate-fade-in">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <span>🏊</span> Facility Management (Admin)
+        </h3>
         <button
-          onClick={addTestFacility}
-          style={{
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "5px",
-            cursor: "pointer"
-          }}
+          onClick={() => openModal()}
+          className="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-700 transition flex items-center gap-2"
         >
-          + Add Test Facility
+          + Add Facility
         </button>
       </div>
 
-      <div style={{
-        backgroundColor: "white",
-        padding: "20px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        marginBottom: "20px"
-      }}>
-        <h3 style={{ marginTop: 0 }}>Summary</h3>
-        <p>Total Facilities: <strong>{facilities.length}</strong></p>
-        <p>Active: <strong>{facilities.filter(f => f.isActive).length}</strong></p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-gray-500 text-xs uppercase font-bold border-b border-gray-200">
+              <th className="p-4">Image</th>
+              <th className="p-4">Info</th>
+              <th className="p-4">Status</th>
+              <th className="p-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 text-sm">
+            {facilities.map((item) => (
+              <tr key={item._id} className="hover:bg-amber-50/30 transition">
+                <td className="p-4">
+                  <img
+                    src={item.image || "https://via.placeholder.com/150"}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover rounded-md shadow-sm border border-gray-200"
+                  />
+                </td>
+                <td className="p-4">
+                  <div className="font-bold text-gray-800 text-base">
+                    {item.name}
+                  </div>
+                  {/* Timings section */}
+                  <div className="text-xs text-amber-600 font-semibold flex items-center gap-1 mt-1">
+                    <span>⏰</span> {item.timings || "24/7"}
+                  </div>
+                  <div className="text-gray-500 text-xs truncate max-w-xs mt-1">
+                    {item.description}
+                  </div>
+                </td>
+                {/* Active Status Badge */}
+                <td className="p-4">
+                  {item.isActive ? (
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                      Inactive
+                    </span>
+                  )}
+                </td>
+                <td className="p-4 text-right">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => openModal(item)}
+                      className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-lg text-xs font-bold transition"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-lg text-xs font-bold transition"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-        gap: "20px"
-      }}>
-        {facilities.map((facility) => (
-          <div
-            key={facility._id}
-            style={{
-              backgroundColor: "white",
-              padding: "20px",
-              borderRadius: "10px",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-              borderLeft: "4px solid #007bff"
-            }}
-          >
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              marginBottom: "15px"
-            }}>
-              <h3 style={{ margin: 0, color: "#333" }}>{facility.name}</h3>
+      {/* --- ADD/EDIT MODAL --- */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden my-8 max-h-[90vh] overflow-y-auto">
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center sticky top-0">
+              <h3 className="text-lg font-bold text-gray-800">
+                {isEditing ? "Edit Facility" : "Add New Facility"}
+              </h3>
               <button
-                onClick={() => deleteFacility(facility._id)}
-                style={{
-                  backgroundColor: "#dc3545",
-                  color: "white",
-                  border: "none",
-                  padding: "5px 10px",
-                  borderRadius: "3px",
-                  cursor: "pointer",
-                  fontSize: "12px"
-                }}
+                onClick={() => setShowModal(false)}
+                className="text-gray-400 hover:text-red-500 text-2xl leading-none"
               >
-                Delete
+                &times;
               </button>
             </div>
 
-            <p style={{ color: "#666", marginBottom: "15px" }}>
-              {facility.description}
-            </p>
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              {/* Name Input */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Facility Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="e.g. Swimming Pool"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition"
+                />
+              </div>
 
-            <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-              <span style={{
-                backgroundColor: "#e9ecef",
-                color: "#495057",
-                padding: "3px 10px",
-                borderRadius: "20px",
-                fontSize: "12px"
-              }}>
-                {facility.category}
-              </span>
-              <span style={{
-                backgroundColor: facility.isActive ? "#d4edda" : "#f8d7da",
-                color: facility.isActive ? "#155724" : "#721c24",
-                padding: "3px 10px",
-                borderRadius: "20px",
-                fontSize: "12px"
-              }}>
-                {facility.isActive ? "Active" : "Inactive"}
-              </span>
-            </div>
+              {/* Timings Input */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Timings / Opening Hours
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    ⏰
+                  </span>
+                  <input
+                    type="text"
+                    name="timings"
+                    value={formData.timings}
+                    onChange={handleChange}
+                    placeholder="e.g. 6:00 AM - 10:00 PM or 24/7"
+                    className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition"
+                  />
+                </div>
+              </div>
 
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingTop: "15px",
-              borderTop: "1px solid #eee",
-              color: "#888",
-              fontSize: "14px"
-            }}>
-              <span>⏰ {facility.timings}</span>
-              <span style={{ fontSize: "12px" }}>
-                Added: {new Date(facility.createdAt).toLocaleDateString()}
-              </span>
-            </div>
+              {/* Active Checkbox */}
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  name="isActive"
+                  checked={formData.isActive}
+                  onChange={handleCheckboxChange}
+                  className="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500 cursor-pointer"
+                />
+                <label
+                  htmlFor="isActive"
+                  className="text-sm font-bold text-gray-700 cursor-pointer select-none"
+                >
+                  Mark as Active
+                </label>
+              </div>
+
+              {/* Image Input */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Facility Image URL
+                </label>
+
+                {formData.image && (
+                  <div className="mb-3 w-full h-40 rounded-lg overflow-hidden border border-gray-200">
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <input
+                  type="text"
+                  name="image"
+                  value={formData.image}
+                  onChange={handleChange}
+                  placeholder="Paste image URL here..."
+                  className="w-full p-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                />
+
+                <div className="text-center text-xs text-gray-400 mb-2">
+                  - OR -
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="w-full text-sm text-gray-500"
+                />
+              </div>
+
+              {/* Description Input */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Description <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="description"
+                  rows="4"
+                  required
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe the facility..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+                ></textarea>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-5 py-2.5 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-bold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-lg bg-amber-600 text-white font-bold hover:bg-amber-700 shadow-lg transition"
+                >
+                  {isEditing ? "Update Facility" : "Save Facility"}
+                </button>
+              </div>
+            </form>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

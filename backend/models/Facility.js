@@ -1,34 +1,34 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const facilitySchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Service name is required'],
-    trim: true
+// Define the Facility Schema
+const FacilitySchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    image: {
+      type: String,
+      required: true,
+    },
+    timings: {
+      type: String,
+      default: "24/7",
+    },
+    category: {
+      type: String,
+      default: "Wellness",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
-  description: {
-    type: String,
-    required: [true, 'Description is required']
-  },
-  icon: {
-    type: String,
-    default: 'fas fa-star'
-  },
-  category: {
-    type: String,
-    default: 'Wellness'
-  },
-  features: [String],
-  timings: {
-    type: String,
-    default: '24/7'
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
-}, {
-  timestamps: true
-});
+  { timestamps: true }
+);
 
-export default mongoose.model('Facility', facilitySchema);
+export default mongoose.model("Facility", FacilitySchema);

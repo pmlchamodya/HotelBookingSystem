@@ -13,7 +13,6 @@ import AdminInquiry from "./AdminInquiry";
 import AdminRooms from "./AdminRooms";
 import AdminFacilities from "./AdminFacilities";
 
-
 const AdminDashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -466,12 +465,11 @@ const AdminDashboard = () => {
             </div>
           )}
           {/* VIEW 7: FACILITIES MANAGEMENT */}
-{activeTab === "facilities" && (
-  <div className="animate-fade-in">
-    <AdminFacilities />
-  </div>
-)}
-
+          {activeTab === "facilities" && (
+            <div className="animate-fade-in">
+              <AdminFacilities />
+            </div>
+          )}
         </div>
       </main>
     </div>

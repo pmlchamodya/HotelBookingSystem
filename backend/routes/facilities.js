@@ -1,37 +1,70 @@
-import express from 'express';
-import Facility from '../models/Facility.js';
+import express from "express";
+import Facility from "../models/Facility.js";
+import { authenticateToken, authorizeRoles } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Test route - add this first
-router.get('/test', (req, res) => {
-  res.json({ message: 'Facilities API is working!' });
-});
-
-// GET all active facilities (Public)
-router.get('/', async (req, res) => {
+//  GET
+router.get("/", async (req, res) => {
   try {
-    console.log('Fetching facilities...');
-    const facilities = await Facility.find({ isActive: true });
-    console.log(`Found ${facilities.length} facilities`);
+    const facilities = await Facility.find();
     res.json(facilities);
-  } catch (error) {
-    console.error('Error fetching facilities:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server Error" });
   }
 });
 
-// POST create new facility (Admin)
-router.post('/', async (req, res) => {
-  try {
-    console.log('Creating facility:', req.body);
-    const facility = new Facility(req.body);
-    await facility.save();
-    res.status(201).json(facility);
-  } catch (error) {
-    console.error('Error creating facility:', error);
-    res.status(400).json({ error: error.message });
+//   POST
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin", "staff"),
+  async (req, res) => {
+    try {
+      const newFacility = new Facility(req.body);
+      const savedFacility = await newFacility.save();
+      res
+        .status(201)
+        .json({ message: "Facility added!", facility: savedFacility });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to add facility." });
+    }
   }
-});
+);
+
+//   PUT
+router.put(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("admin", "staff"),
+  async (req, res) => {
+    try {
+      const updatedFacility = await Facility.findByIdAndUpdate(
+        req.params.id,
+        { $set: req.body },
+        { new: true }
+      );
+      res.json({ message: "Updated successfully!", facility: updatedFacility });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update." });
+    }
+  }
+);
+
+//  DELETE
+router.delete(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("admin", "staff"),
+  async (req, res) => {
+    try {
+      await Facility.findByIdAndDelete(req.params.id);
+      res.json({ message: "Deleted successfully!" });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete." });
+    }
+  }
+);
 
 export default router;

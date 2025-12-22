@@ -5,6 +5,7 @@ import { notifySuccess } from "../../../components/alert/ToastContext";
 import StaffBooking from "./StaffBooking";
 import StaffInquiry from "./StaffInquiry";
 import StaffRooms from "./StaffRooms";
+import StaffFacilities from "./StaffFacilities";
 
 const StaffDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -76,6 +77,16 @@ const StaffDashboard = () => {
           >
             <span className="text-xl">📩</span> Inquiries
           </button>
+          <button
+            onClick={() => setActiveTab("facilities")}
+            className={`w-full text-left px-5 py-3.5 rounded-xl font-medium transition-all duration-300 flex items-center gap-3 ${
+              activeTab === "facilities"
+                ? "bg-green-700 text-white shadow-lg shadow-green-900/50 translate-x-1"
+                : "text-green-100 hover:bg-green-800/50 hover:translate-x-1"
+            }`}
+          >
+            <span className="text-xl">🏊</span> Facilities
+          </button>
         </nav>
 
         <div className="p-6 border-t border-green-800 bg-green-950/30">
@@ -142,6 +153,12 @@ const StaffDashboard = () => {
         {activeTab === "inquiries" && (
           <div className="animate-fade-in">
             <StaffInquiry />
+          </div>
+        )}
+        {/* ---  FACILITIES MANAGEMENT --- */}
+        {activeTab === "facilities" && (
+          <div className="animate-fade-in">
+            <StaffFacilities />
           </div>
         )}
       </main>
