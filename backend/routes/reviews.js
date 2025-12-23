@@ -10,7 +10,13 @@ router.post("/", authenticateToken, async (req, res) => {
   try {
     const savedReview = await newReview.save();
 
-        res.status(200).json(savedReview);
+    // SEND REAL-TIME NOTIFICATION
+    req.io.emit("new_notification", {
+      message: `⭐ New ${req.body.rating}-Star Review Received!`,
+      type: "review",
+    });
+
+    res.status(200).json(savedReview);
   } catch (err) {
     console.error("Review Error:", err);
     res.status(500).json(err);
