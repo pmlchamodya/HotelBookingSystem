@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../../../config/api";
 import { AuthContext } from "../../../context/AuthContext";
 import { notifySuccess } from "../../../components/alert/ToastContext";
+import Reviews from "./Reviews";
 
 const Rooms = () => {
   const { user, logout } = useContext(AuthContext);
@@ -14,6 +15,8 @@ const Rooms = () => {
   const [loading, setLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [viewingReviewsFor, setViewingReviewsFor] = useState(null);
+  const [allReviews, setAllReviews] = useState([]);
 
   // --- GET SEARCH DATA ---
   const searchData = location.state?.searchData;
@@ -36,6 +39,35 @@ const Rooms = () => {
     };
     fetchRooms();
   }, []);
+
+  // --- FETCH REVIEWS  ---
+  useEffect(() => {
+    const fetchAllReviews = async () => {
+      try {
+        const res = await api.get("/reviews");
+        setAllReviews(res.data);
+      } catch (err) {
+        console.error("Failed to fetch reviews", err);
+      }
+    };
+    fetchAllReviews();
+  }, []); // --- FETCH REVIEWS  ---
+  useEffect(() => {
+    const fetchAllReviews = async () => {
+      try {
+        const res = await api.get("/reviews");
+        setAllReviews(res.data);
+      } catch (err) {
+        console.error("Failed to fetch reviews", err);
+      }
+    };
+    fetchAllReviews();
+  }, []);
+
+  // --- HELPER: GET REVIEW COUNT ---
+  const getReviewCount = (roomId) => {
+    return allReviews.filter((r) => r.room === roomId).length;
+  };
 
   // --- SCROLL EFFECT ---
   useEffect(() => {
@@ -326,22 +358,47 @@ const Rooms = () => {
                         </div>
                       </div>
 
-                      <button
-                        disabled={!room.is_available}
-                        onClick={() => navigate(`/booking/${room._id}`)}
-                        className={`w-full py-4 rounded-xl font-bold tracking-wider text-sm transition-all shadow-lg ${
-                          room.is_available
-                            ? "bg-slate-900 text-white hover:bg-amber-600 hover:shadow-amber-500/30"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                        }`}
-                      >
-                        {room.is_available ? "BOOK NOW" : getStatusLabel(room)}
-                      </button>
+                     {/* Action Buttons Area */}
+                      <div className="flex gap-4 mt-4">
+                        <button
+                          disabled={!room.is_available}
+                          onClick={() => navigate(`/booking/${room._id}`)}
+                          className={`flex-1 py-3 rounded-lg font-bold tracking-wider text-sm transition-all shadow-lg ${
+                            room.is_available
+                              ? "bg-slate-900 text-white hover:bg-amber-600 hover:shadow-amber-500/30"
+                              : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                          }`}
+                        >
+                          {room.is_available
+                            ? "BOOK NOW"
+                            : getStatusLabel(room)}
+                        </button>
+
+                        {/* REVIEWS BUTTON */}
+                        <button
+                          onClick={() => setViewingReviewsFor(room._id)}
+                          className="px-5 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 font-bold text-sm hover:bg-amber-500 hover:text-white transition flex items-center gap-2 shadow-sm"
+                        >
+                          <span>💬</span> Reviews
+                          {getReviewCount(room._id) > 0 && (
+                            <span className="ml-1 bg-white text-amber-600 text-[10px] px-2 py-0.5 rounded-full border border-amber-200 shadow-sm">
+                              {getReviewCount(room._id)}
+                            </span>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+          )}
+          {/* --- POPUP COMPONENT RENDER ---*/}
+          {viewingReviewsFor && (
+            <Reviews
+              roomId={viewingReviewsFor}
+              onClose={() => setViewingReviewsFor(null)}
+            />
           )}
         </div>
       </div>
