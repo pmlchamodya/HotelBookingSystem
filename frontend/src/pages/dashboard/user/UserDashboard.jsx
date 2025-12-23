@@ -8,6 +8,7 @@ import {
 import api from "../../../config/api";
 import EyeIconShowPassword from "../../../components/icon/Eyeiconshowpassword";
 import UserMyBookings from "./UserMyBookings";
+import UserReviews from "./UserReviews";
 
 const UserDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -208,6 +209,9 @@ const UserDashboard = () => {
 
           {/* --- MY BOOKINGS SECTION --- */}
           {activeTab === "bookings" && <UserMyBookings />}
+
+            {/* --- MY REVIEWS SECTION --- */}
+          {activeTab === "reviews" && <UserReviews />}
 
           {/* --- MY PROFILE SECTION  --- */}
           {activeTab === "profile" && (
