@@ -7,6 +7,8 @@ import {
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { SocketProvider } from "./components/alert/SocketContext";
+import NotFound from "./components/404error/NotFound";
 
 // Import Components
 import Login from "./components/auth/Login";
@@ -97,8 +99,8 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Catch-all Redirect */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* 404 Page Route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
@@ -106,10 +108,12 @@ const AppRoutes = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-        <Toaster position="top-right" reverseOrder={false} />
-      </Router>
+      <SocketProvider>
+        <Router>
+          <AppRoutes />
+          <Toaster position="top-right" reverseOrder={false} />
+        </Router>
+      </SocketProvider>
     </AuthProvider>
   );
 };

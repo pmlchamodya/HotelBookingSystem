@@ -9,6 +9,12 @@ router.post("/", async (req, res) => {
   try {
     const newInquiry = new Inquiry(req.body);
     await newInquiry.save();
+
+    req.io.emit("new_notification", {
+      message: `📩 New Inquiry from ${req.body.name}: "${req.body.subject}"`,
+      type: "inquiry",
+    });
+
     res.status(201).json({ message: "Inquiry sent successfully!" });
   } catch (error) {
     console.error("Error sending inquiry:", error);

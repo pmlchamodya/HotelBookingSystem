@@ -38,6 +38,12 @@ router.post("/register", async (req, res) => {
     // Save to Database
     await user.save();
 
+    // SEND REAL-TIME NOTIFICATION
+    req.io.emit("new_notification", {
+      message: `👤 New User Registered: ${user.username}`,
+      type: "user",
+    });
+
     // Generate JWT Token
     const payload = {
       id: user.id,

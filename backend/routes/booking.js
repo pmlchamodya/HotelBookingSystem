@@ -19,6 +19,13 @@ router.post("/", authenticateToken, async (req, res) => {
     });
 
     await newBooking.save();
+
+    // SEND REAL-TIME NOTIFICATION
+    req.io.emit("new_notification", {
+      message: `📅 New Booking Alert! Check In: ${checkInDate}`,
+      type: "booking",
+    });
+
     res
       .status(201)
       .json({ message: "Booking created successfully", booking: newBooking });
