@@ -12,6 +12,7 @@ import AdminBooking from "./AdminBooking";
 import AdminInquiry from "./AdminInquiry";
 import AdminRooms from "./AdminRooms";
 import AdminFacilities from "./AdminFacilities";
+import AdminReviews from "./AdminReviews";
 
 const AdminDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -202,10 +203,11 @@ const AdminDashboard = () => {
             isActive={activeTab === "inquiries"}
             onClick={() => setActiveTab("inquiries")}
           />
-          <SidebarBtn
+         <SidebarBtn
             label="Reviews"
             icon="⭐"
-            onClick={() => alert("Member 6 Work")}
+            isActive={activeTab === "reviews"}
+            onClick={() => setActiveTab("reviews")}
           />
         </nav>
 
@@ -468,6 +470,12 @@ const AdminDashboard = () => {
           {activeTab === "facilities" && (
             <div className="animate-fade-in">
               <AdminFacilities />
+            </div>
+          )}
+           {/* VIEW 8: REVIEWS MANAGEMENT */}
+          {activeTab === "reviews" && (
+            <div className="animate-fade-in">
+              <AdminReviews />
             </div>
           )}
         </div>

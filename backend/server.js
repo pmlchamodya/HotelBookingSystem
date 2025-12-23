@@ -9,7 +9,7 @@ import bookingRoutes from "./routes/booking.js";
 import inquiryRoutes from "./routes/inquiry.js";
 import roomRoutes from "./routes/rooms.js";
 import facilityRoutes from "./routes/facilities.js";
-
+import reviewRoutes from "./routes/reviews.js";
 
 dotenv.config();
 
@@ -31,7 +31,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/inquiries", inquiryRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/facilities", facilityRoutes);
-
+app.use("/api/reviews", reviewRoutes);
 // Test Route
 app.get("/", (req, res) => {
   res.send("API is running...");
